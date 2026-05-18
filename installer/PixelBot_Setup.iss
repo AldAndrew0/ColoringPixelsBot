@@ -1,18 +1,17 @@
 [Setup]
-; Informazioni generali sull'app
 AppName=PixelBot
 AppVersion=1.3.1
 AppPublisher=Andrea Alduino
-AppSupportURL=https://github.com/IL_TUO_NOME_UTENTE/ColoringPixelsBot
+AppSupportURL=https://github.com/AndreaAlduino/PixelBot
 
-; Zona dedicata in AppData
+; Installazione in AppData (nessun permesso admin richiesto)
 DefaultDirName={localappdata}\ColoringPixelsBot
 DefaultGroupName=PixelBot
 
-; Eseguibile di output
+; Output
 OutputDir=.
 OutputBaseFilename=PixelBot_Installer_v1.3.1
-SetupIconFile=PixelBot.ico
+SetupIconFile=..\assets\PixelBot.ico
 
 ; Compressione
 Compression=lzma2
@@ -25,10 +24,10 @@ PrivilegesRequired=lowest
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "PixelBot.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\PixelBot.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\PixelBot"; Filename: "{app}\PixelBot.exe"; IconFilename: "{app}\PixelBot.exe"
+Name: "{group}\PixelBot";    Filename: "{app}\PixelBot.exe"; IconFilename: "{app}\PixelBot.exe"
 Name: "{userdesktop}\PixelBot"; Filename: "{app}\PixelBot.exe"; IconFilename: "{app}\PixelBot.exe"; Tasks: desktopicon
 
 [Run]

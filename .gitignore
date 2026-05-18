@@ -1,1 +1,9 @@
+# Eseguibili compilati
 *.exe
+
+# File impostazioni utente (generato a runtime, non va in versioning)
+PixelBot_Settings.ini
+
+# File temporanei Windows
+Thumbs.db
+desktop.ini
