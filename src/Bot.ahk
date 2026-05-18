@@ -17,18 +17,20 @@ StartBot() {
 
     if on := !on
     {
-        Parti := StrSplit(StrLower(GridEdit.Value), "x")
+        ; Bug 4 Fix: rimuovi tutti gli spazi prima di parsare (gestisce "32 x 32", "32X32", ecc.)
+        GridValue := StrReplace(GridEdit.Value, " ", "")
+        Parti := StrSplit(StrLower(GridValue), "x")
         if (Parti.Length != 2) {
             SoundBeep 200, 300
-            ToolTip "❌ Formato dimensioni errato!"
+            ToolTip "❌ Formato errato! Usa: 32x32 oppure 50x30"
             Sleep 1500
             ToolTip ""
             on := false
             return
         }
 
-        Colonne    := Number(Parti[1])
-        Righe      := Number(Parti[2])
+        Colonne    := Number(Trim(Parti[1]))
+        Righe      := Number(Trim(Parti[2]))
         NumColori  := Number(ColoriEdit.Value)
         Passo_X    := (X_Max - X_Min) / (Colonne - 1)
         Passo_Y    := (Y_Max - Y_Min) / (Righe - 1)
@@ -95,26 +97,28 @@ StartBot() {
             if (!on)
                 break
 
-            ; --- CICLO 2: Rifinitura bordi laterali (prime 4 col SX + ultime 4 col DX) ---
+            ; --- CICLO 2: Rifinitura bordi VERTICALI (colonne SX e DX) ---
+            ; Bug 1 Fix: BorderCount dinamico → mai duplicati su griglie piccole (<8 col)
+            ;   Es. 4 col: BorderCount=2 → SX=[0,1]  DX=[3,2]  (nessuna sovrapposizione)
+            ;   Es. 8 col: BorderCount=4 → SX=[0,1,2,3]  DX=[7,6,5,4]
             Click "Down"
-            BordiArray := [0, 1, 2, 3, Colonne-4, Colonne-3, Colonne-2, Colonne-1]
+            BorderColCount := Min(4, Colonne // 2)
+            BordiColArray := []
+            Loop BorderColCount
+                BordiColArray.Push(A_Index - 1)         ; SX: 0, 1, 2, 3
+            Loop BorderColCount
+                BordiColArray.Push(Colonne - A_Index)   ; DX: Colonne-1, Colonne-2, ...
 
-            For Col_Bordo in BordiArray {
+            For Col_Bordo in BordiColArray {
                 if (!on)
                     break
 
-                ; Sicurezza: salta indici fuori range (griglie molto piccole)
-                if (Col_Bordo < 0 || Col_Bordo >= Colonne)
-                    continue
-
-                ; Forza la colonna esatta per evitare buchi intermedi
                 X_Cur := (Col_Bordo == Colonne-1) ? X_Max : X_Min + (Col_Bordo * Passo_X)
 
                 Loop Righe {
                     if (!on)
                         break
 
-                    ; Movimento alternato: colonne pari Sopra→Sotto, dispari Sotto→Sopra
                     if (Mod(Col_Bordo, 2) == 0) {
                         Y_Cur := (A_Index == Righe) ? Y_Max : Y_Min + ((A_Index - 1) * Passo_Y)
                     } else {
@@ -122,9 +126,46 @@ StartBot() {
                     }
 
                     MouseMove X_Cur, Y_Cur, 0
-                    if (BordoVal > 0) {
+                    if (BordoVal > 0)
                         Sleep BordoVal
+                }
+            }
+            Click "Up"
+
+            if (!on)
+                break
+
+            ; --- CICLO 3: Rifinitura bordi ORIZZONTALI (righe TOP e BOTTOM) ---
+            ; Bug 2 Fix: aggiunta passata chirurgica sulle prime/ultime righe
+            ;   stessa logica dinamica del Ciclo 2 ma applicata alle righe
+            Click "Down"
+            BorderRowCount := Min(4, Righe // 2)
+            BordiRigheArray := []
+            Loop BorderRowCount
+                BordiRigheArray.Push(A_Index - 1)       ; TOP: 0, 1, 2, 3
+            Loop BorderRowCount
+                BordiRigheArray.Push(Righe - A_Index)   ; BOTTOM: Righe-1, Righe-2, ...
+
+            For Riga_Bordo in BordiRigheArray {
+                if (!on)
+                    break
+
+                Y_Cur := (Riga_Bordo == Righe-1) ? Y_Max : Y_Min + (Riga_Bordo * Passo_Y)
+
+                Loop Colonne {
+                    if (!on)
+                        break
+
+                    ; Movimento alternato: righe pari SX→DX, dispari DX→SX
+                    if (Mod(Riga_Bordo, 2) == 0) {
+                        X_Cur := (A_Index == Colonne) ? X_Max : X_Min + ((A_Index - 1) * Passo_X)
+                    } else {
+                        X_Cur := (A_Index == Colonne) ? X_Min : X_Max - ((A_Index - 1) * Passo_X)
                     }
+
+                    MouseMove X_Cur, Y_Cur, 0
+                    if (BordoVal > 0)
+                        Sleep BordoVal
                 }
             }
             Click "Up"
