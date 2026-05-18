@@ -20,7 +20,6 @@ Global HK2 := IniRead(IniFile, "Hotkeys", "Angle2", "F2")
 Global HK3 := IniRead(IniFile, "Hotkeys", "Reset", "F3")
 Global HK_Start := IniRead(IniFile, "Hotkeys", "Start", "z")
 
-; Se l'utente ha una vecchia versione salvata con il numero dello slider, lo resettiamo
 if (IsInteger(Speed_Saved)) {
     Speed_Saved := "1.0x (Originale)"
 }
@@ -28,7 +27,7 @@ if (IsInteger(Speed_Saved)) {
 ; ==============================================================================
 ; CREAZIONE INTERFACCIA GRAFICA (GUI)
 ; ==============================================================================
-MainGui := Gui("+AlwaysOnTop", "PixelBot v1.3.0")
+MainGui := Gui("+AlwaysOnTop", "PixelBot v1.3.1")
 MainGui.OnEvent("Close", (*) => ExitApp())
 
 MainGui.SetFont("s9 bold")
@@ -41,7 +40,7 @@ Global GridEdit := MainGui.Add("Edit", "w250", Grid_Saved)
 MainGui.Add("Text", "w250 y+10", "Numero di Colori:")
 Global ColoriEdit := MainGui.Add("Edit", "w250", Colors_Saved)
 
-MainGui.Add("Text", "w250 y+10", "Velocità di esecuzione:")
+MainGui.Add("Text", "w250 y+10", "Velocità de esecuzione:")
 SpeedArray := ["0.50x (Lento)", "0.75x", "1.0x (Originale)", "1.25x", "1.50x", "2.0x", "3.0x (Max)"]
 Global SpeedDropdown := MainGui.Add("DropDownList", "w250", SpeedArray)
 SpeedDropdown.Choose(Speed_Saved)
@@ -72,14 +71,13 @@ MainGui.Add("Text", "w250 cGray Center y+10", "Premi F4 per nascondere/mostrare"
 
 MainGui.Show("AutoSize Center")
 
-; Registra F4 in modo dinamico per evitare errori
 Hotkey("F4", (*) => ToggleGui())
 
 ; ==============================================================================
 ; LOGICA HOTKEYS DINAMICHE
 ; ==============================================================================
 ToggleGui() {
-    if WinExist("PixelBot v1.3.0") {
+    if WinExist("PixelBot v1.3.1") {
         MainGui.Hide()
     } else {
         MainGui.Show()
@@ -89,23 +87,12 @@ ToggleGui() {
 SaveAndApply() {
     Global HK1, HK2, HK3, HK_Start
     
-    try {
-        Hotkey(HK1, "Off")
-    }
-    try {
-        Hotkey(HK2, "Off")
-    }
-    try {
-        Hotkey(HK3, "Off")
-    }
-    try {
-        Hotkey(HK_Start, "Off")
-    }
+    try { Hotkey(HK1, "Off") }
+    try { Hotkey(HK2, "Off") }
+    try { Hotkey(HK3, "Off") }
+    try { Hotkey(HK_Start, "Off") }
 
-    HK1 := HK1_Edit.Value
-    HK2 := HK2_Edit.Value
-    HK3 := HK3_Edit.Value
-    HK_Start := HKStart_Edit.Value
+    HK1 := HK1_Edit.Value, HK2 := HK2_Edit.Value, HK3 := HK3_Edit.Value, HK_Start := HKStart_Edit.Value
 
     IniWrite(GridEdit.Value, IniFile, "Settings", "Grid")
     IniWrite(ColoriEdit.Value, IniFile, "Settings", "Colors")
@@ -137,21 +124,17 @@ SetPos1() {
         return
     }
     IsWaiting := true
-    
     SoundBeep 500, 150
     ToolTip ">> Fai CLICK SINISTRO sull'ANGOLO IN ALTO A SINISTRA <<"
-    
     KeyWait "LButton" 
-    
     if !KeyWait("LButton", "D T10") {
         SoundBeep 200, 300
-        ToolTip "Tempo scaduto per l'Angolo 1!"
+        ToolTip "Tempo scaduto!"
         Sleep 1500
         ToolTip ""
         IsWaiting := false
         return
     }
-    
     MouseGetPos &X_Min, &Y_Min
     SoundBeep 1000, 150
     ToolTip "✅ Angolo 1 registrato!"
@@ -166,25 +149,21 @@ SetPos2() {
         return
     }
     IsWaiting := true
-    
     SoundBeep 500, 150
     ToolTip ">> Fai CLICK SINISTRO sull'ANGOLO IN BASSO A DESTRA <<"
-    
     KeyWait "LButton" 
-    
     if !KeyWait("LButton", "D T10") {
         SoundBeep 200, 300
-        ToolTip "Tempo scaduto per l'Angolo 2!"
+        ToolTip "Tempo scaduto!"
         Sleep 1500
         ToolTip ""
         IsWaiting := false
         return
     }
-    
     MouseGetPos &X_Max, &Y_Max
     Calibrato := true
     SoundBeep 1000, 150
-    ToolTip "✅ Angolo 2 registrato! Pronto a partire."
+    ToolTip "✅ Angolo 2 registrato!"
     Sleep 1000
     ToolTip ""
     IsWaiting := false
@@ -193,23 +172,20 @@ SetPos2() {
 ResetCal() {
     Global Calibrato := false
     SoundBeep 800, 100
-    SoundBeep 600, 150
     ToolTip "🔄 Reset effettuato!"
     Sleep 1000
     ToolTip ""
 }
 
 ; ==============================================================================
-; MOTORE DEL BOT
+; MOTORE DEL BOT (CORRETTO ED OTTIMIZZATO)
 ; ==============================================================================
 Global on := false
 StartBot() {
     Global on, X_Min, Y_Min, X_Max, Y_Max, Calibrato, IsWaiting
-    
     if (IsWaiting) {
         return
     }
-
     if (!Calibrato) {
         SoundBeep 200, 300
         ToolTip "❌ ERRORE: Registra prima i due angoli!"
@@ -230,18 +206,11 @@ StartBot() {
             return
         }
         
-        Colonne := Number(Parti[1])
-        Righe := Number(Parti[2])
-        NumColori := Number(ColoriEdit.Value)
+        Colonne := Number(Parti[1]), Righe := Number(Parti[2]), NumColori := Number(ColoriEdit.Value)
+        Passo_X := (X_Max - X_Min) / (Colonne - 1), Passo_Y := (Y_Max - Y_Min) / (Righe - 1)
         
-        Passo_X := (X_Max - X_Min) / (Colonne - 1)
-        Passo_Y := (Y_Max - Y_Min) / (Righe - 1)
-        
-        ; -- IMPOSTAZIONE ALGORITMO DI VELOCITÀ --
         SelectedSpeed := SpeedDropdown.Text
-        ModuloVal := 4
-        SleepVal := 1
-        BordoVal := 1
+        ModuloVal := 4, SleepVal := 1, BordoVal := 1
         
         if (SelectedSpeed == "0.50x (Lento)") {
             ModuloVal := 1, SleepVal := 4, BordoVal := 5
@@ -270,25 +239,30 @@ StartBot() {
             MouseMove X_Min, Y_Min, 0
             Click "Down"
             
+            ; --- CICLO 1: ORIZZONTALE (RIEMPIMENTO COMPLETO) ---
             Loop Righe {
                 if (!on) {
                     break
                 }
                 
-                Y_Cur := Y_Min + ((A_Index - 1) * Passo_Y)
+                ; FIX ARROTONDAMENTO: Se è l'ultima riga, la costringiamo su Y_Max esatto
+                Y_Cur := (A_Index == Righe) ? Y_Max : Y_Min + ((A_Index - 1) * Passo_Y)
+                
                 Loop Colonne {
                     if (!on) {
                         break
                     }
                     
-                    Col_Idx := (Direzione == 1) ? (A_Index - 1) : (Colonne - A_Index)
-                    MouseMove X_Min + (Col_Idx * Passo_X), Y_Cur, 0
+                    ; FIX FINE RIGA: Se è l'ultima colonna, la costringiamo su X_Max esatto
+                    if (Direzione == 1) {
+                        X_Cur := (A_Index == Colonne) ? X_Max : X_Min + ((A_Index - 1) * Passo_X)
+                    } else {
+                        X_Cur := (A_Index == Colonne) ? X_Min : X_Max - ((A_Index - 1) * Passo_X)
+                    }
                     
-                    ; Applica il moltiplicatore di velocità calcolato
-                    if (ModuloVal > 0) {
-                        if (Mod(A_Index, ModuloVal) == 0) {
-                            Sleep SleepVal
-                        }
+                    MouseMove X_Cur, Y_Cur, 0
+                    if (ModuloVal > 0 && Mod(A_Index, ModuloVal) == 0) {
+                        Sleep SleepVal
                     }
                 }
                 Sleep 20
@@ -300,30 +274,39 @@ StartBot() {
                 break
             }
             
+            ; --- CICLO 2: RIFINITURA LATI CHIRURGICA (4 COLONNE SX, 4 DX - 1 SOLA VOLTA) ---
             Click "Down"
-            Loop 2 { 
-                For Col_Bordo in [0, 1, 2, 3, Colonne-4, Colonne-3, Colonne-2, Colonne-1] {
+            ; Crea l'array esatto dei bordi: prime 4 (0,1,2,3) e ultime 4
+            BordiArray := [0, 1, 2, 3, Colonne-4, Colonne-3, Colonne-2, Colonne-1]
+            
+            For Col_Bordo in BordiArray {
+                if (!on) {
+                    break
+                }
+                
+                ; Controllo di sicurezza per griglie molto piccole
+                if (Col_Bordo < 0 || Col_Bordo >= Colonne) {
+                    continue
+                }
+                
+                ; Forza la colonna esatta per evitare buchi intermedi
+                X_Cur := (Col_Bordo == Colonne-1) ? X_Max : X_Min + (Col_Bordo * Passo_X)
+                
+                Loop Righe {
                     if (!on) {
                         break
                     }
                     
-                    X_Cur := X_Min + (Col_Bordo * Passo_X)
-                    Loop Righe {
-                        if (!on) {
-                            break
-                        }
-                        
-                        Y_Cur := (Mod(Col_Bordo, 2) == 0) ? (Y_Min + ((A_Index-1)*Passo_Y)) : (Y_Max - ((A_Index-1)*Passo_Y))
-                        MouseMove X_Cur, Y_Cur, 0
-                        
-                        ; Pausa sui bordi in base al moltiplicatore
-                        if (BordoVal > 0) {
-                            Sleep BordoVal
-                        } else if (ModuloVal > 0) {
-                            if (Mod(A_Index, ModuloVal) == 0) {
-                                Sleep 1
-                            }
-                        }
+                    ; Movimento alternato Sopra-Sotto / Sotto-Sopra
+                    if (Mod(Col_Bordo, 2) == 0) {
+                        Y_Cur := (A_Index == Righe) ? Y_Max : Y_Min + ((A_Index - 1) * Passo_Y)
+                    } else {
+                        Y_Cur := (A_Index == Righe) ? Y_Min : Y_Max - ((A_Index - 1) * Passo_Y)
+                    }
+                    
+                    MouseMove X_Cur, Y_Cur, 0
+                    if (BordoVal > 0) {
+                        Sleep BordoVal
                     }
                 }
             }

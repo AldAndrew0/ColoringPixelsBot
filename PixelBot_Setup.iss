@@ -1,7 +1,7 @@
 [Setup]
 ; Informazioni generali sull'app
 AppName=PixelBot
-AppVersion=1.3.0
+AppVersion=1.3.1
 AppPublisher=Andrea Alduino
 AppSupportURL=https://github.com/IL_TUO_NOME_UTENTE/ColoringPixelsBot
 
@@ -11,7 +11,7 @@ DefaultGroupName=PixelBot
 
 ; Eseguibile di output
 OutputDir=.
-OutputBaseFilename=PixelBot_Installer_v1.3.0
+OutputBaseFilename=PixelBot_Installer_v1.3.1
 SetupIconFile=PixelBot.ico
 
 ; Compressione
