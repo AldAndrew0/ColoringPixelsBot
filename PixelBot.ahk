@@ -1,121 +1,173 @@
 ﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
 #MaxThreadsPerHotkey 2
 
 CoordMode "Mouse", "Screen"
 SetMouseDelay -1
 
-; Variabili Globali
+; --- VARIABILI GLOBALI E SETTING PREDEFINITI ---
 Global X_Min := 0, Y_Min := 0, X_Max := 0, Y_Max := 0
 Global Calibrato := false
-Global GuiVisibile := true 
+Global IniFile := A_ScriptDir "\PixelBot_Settings.ini"
+
+; Caricamento impostazioni dal file .ini (se esiste)
+Global Grid_Saved := IniRead(IniFile, "Settings", "Grid", "32x32")
+Global Colors_Saved := IniRead(IniFile, "Settings", "Colors", "10")
+Global Speed_Saved := IniRead(IniFile, "Settings", "Speed", "2") ; Default 2ms
+Global HK1 := IniRead(IniFile, "Hotkeys", "Angle1", "F1")
+Global HK2 := IniRead(IniFile, "Hotkeys", "Angle2", "F2")
+Global HK3 := IniRead(IniFile, "Hotkeys", "Reset", "F3")
+Global HK_Start := IniRead(IniFile, "Hotkeys", "Start", "z")
 
 ; ==============================================================================
-; CREAZIONE DELL'INTERFACCIA GRAFICA (GUI)
+; CREAZIONE INTERFACCIA GRAFICA (GUI)
 ; ==============================================================================
-MainGui := Gui("+AlwaysOnTop", "Coloring Pixels Bot - Pannello")
+MainGui := Gui("+AlwaysOnTop", "PixelBot v1.1.0")
+MainGui.OnEvent("Close", (*) => ExitApp()) ; Chiusura standard con la X
 
-MainGui.Add("Text", "w250", "1. Risoluzione Schermo (Informativa):")
-ResList := MainGui.Add("DropDownList", "w250 vRis", ["1280x720", "1366x768", "1600x900", "1920x1080", "2560x1440", "3840x2160"])
-ResList.Text := A_ScreenWidth "x" A_ScreenHeight 
+MainGui.SetFont("s9 bold")
+MainGui.Add("Text", "w250", "--- CONFIGURAZIONE DISEGNO ---")
+MainGui.SetFont("s9 norm") 
 
-MainGui.Add("Text", "w250 y+15", "2. Dimensioni del Disegno (es. 50x30):")
-Global GridEdit := MainGui.Add("Edit", "w250", "32x32") 
+MainGui.Add("Text", "w250 y+10", "Dimensioni (es. 50x30):")
+Global GridEdit := MainGui.Add("Edit", "w250", Grid_Saved)
 
-MainGui.Add("Text", "w250 y+15", "3. Numero di Colori nel Disegno:")
-Global ColoriEdit := MainGui.Add("Edit", "w250", "10") 
+MainGui.Add("Text", "w250 y+10", "Numero di Colori:")
+Global ColoriEdit := MainGui.Add("Edit", "w250", Colors_Saved)
 
-MainGui.Add("Text", "w250 y+15", "4. Calibrazione Area:")
-BtnF1 := MainGui.Add("Button", "w250 h30", "Imposta Angolo SUP-SIN (Tasto F1)")
-BtnF1.OnEvent("Click", (*) => GuiSetPos(1))
+MainGui.Add("Text", "w250 y+10", "Velocità (ms di pausa):")
+Global SpeedSlider := MainGui.Add("Slider", "w250 Range1-20 ToolTip", Speed_Saved)
 
-BtnF2 := MainGui.Add("Button", "w250 h30", "Imposta Angolo INF-DES (Tasto F2)")
-BtnF2.OnEvent("Click", (*) => GuiSetPos(2))
+MainGui.SetFont("s9 bold")
+MainGui.Add("Text", "w250 y+15", "--- TASTI RAPIDI (HOTKEYS) ---")
+MainGui.SetFont("s9 norm") 
 
-BtnF3 := MainGui.Add("Button", "w250 h30", "Resetta Calibrazione (Tasto F3)")
-BtnF3.OnEvent("Click", (*) => ResetCal())
+MainGui.Add("Text", "x10 y+15 w120", "Angolo 1:")
+Global HK1_Edit := MainGui.Add("Hotkey", "x140 yp-3 w120", HK1)
 
-MainGui.Add("Text", "w250 y+15 cGray", "Tasto F4: Mostra/Nascondi Menu`nTasto Z: Avvia/Ferma il Bot`nTasto ESC: Chiudi tutto")
+MainGui.Add("Text", "x10 y+15 w120", "Angolo 2:")
+Global HK2_Edit := MainGui.Add("Hotkey", "x140 yp-3 w120", HK2)
+
+MainGui.Add("Text", "x10 y+15 w120", "Reset:")
+Global HK3_Edit := MainGui.Add("Hotkey", "x140 yp-3 w120", HK3)
+
+MainGui.Add("Text", "x10 y+15 w120", "Avvia/Stop:")
+Global HKStart_Edit := MainGui.Add("Hotkey", "x140 yp-3 w120", HK_Start)
+
+BtnSave := MainGui.Add("Button", "x10 y+20 w250 h30", "SALVA E APPLICA")
+BtnSave.OnEvent("Click", (*) => SaveAndApply())
+
+MainGui.Add("Text", "w250 cGray Center y+10", "Premi F4 per nascondere/mostrare")
 
 MainGui.Show("AutoSize Center")
 
 ; ==============================================================================
-; FUNZIONI COLLEGATE AL MENU E AI TASTI
+; LOGICA HOTKEYS DINAMICHE
 ; ==============================================================================
-GuiSetPos(tipo) {
-    ToolTip "Sposta il mouse sul punto esatto... 3 secondi!"
-    Sleep 1000
-    ToolTip "2 secondi..."
-    Sleep 1000
-    ToolTip "1 secondo..."
-    Sleep 1000
-    if (tipo == 1) {
-        SetPos1()
-    } else {
-        SetPos2()
+SaveAndApply() {
+    Global HK1, HK2, HK3, HK_Start
+    
+    try {
+        Hotkey(HK1, "Off")
     }
+    try {
+        Hotkey(HK2, "Off")
+    }
+    try {
+        Hotkey(HK3, "Off")
+    }
+    try {
+        Hotkey(HK_Start, "Off")
+    }
+
+    HK1 := HK1_Edit.Value
+    HK2 := HK2_Edit.Value
+    HK3 := HK3_Edit.Value
+    HK_Start := HKStart_Edit.Value
+
+    IniWrite(GridEdit.Value, IniFile, "Settings", "Grid")
+    IniWrite(ColoriEdit.Value, IniFile, "Settings", "Colors")
+    IniWrite(SpeedSlider.Value, IniFile, "Settings", "Speed")
+    IniWrite(HK1, IniFile, "Hotkeys", "Angle1")
+    IniWrite(HK2, IniFile, "Hotkeys", "Angle2")
+    IniWrite(HK3, IniFile, "Hotkeys", "Reset")
+    IniWrite(HK_Start, IniFile, "Hotkeys", "Start")
+
+    ; Attiva le nuove Hotkey
+    Hotkey(HK1, (*) => SetPos1())
+    Hotkey(HK2, (*) => SetPos2())
+    Hotkey(HK3, (*) => ResetCal())
+    Hotkey(HK_Start, (*) => StartBot())
+
+    ToolTip "Impostazioni salvate e applicate!"
+    Sleep 1500
+    ToolTip ""
 }
 
+SaveAndApply()
+
+; ==============================================================================
+; FUNZIONI CORE (AGGIORNATE CON IL CLICK MOUSE)
+; ==============================================================================
 SetPos1() {
     Global X_Min, Y_Min
+    ToolTip "Fai CLICK SINISTRO sull'angolo in ALTO A SINISTRA del disegno..."
+    
+    KeyWait "LButton"      ; Aspetta che il tasto sinistro venga rilasciato (se hai appena cliccato la GUI)
+    KeyWait "LButton", "D" ; Attende che il tasto sinistro venga premuto
+    
     MouseGetPos &X_Min, &Y_Min
-    ToolTip "Angolo SUPERIORE SINISTRO registrato!"
+    ToolTip "Angolo 1 registrato!"
     Sleep 800
     ToolTip ""
 }
 
 SetPos2() {
     Global X_Max, Y_Max, Calibrato
+    ToolTip "Fai CLICK SINISTRO sull'angolo in BASSO A DESTRA del disegno..."
+    
+    KeyWait "LButton"      ; Aspetta il rilascio
+    KeyWait "LButton", "D" ; Attende il click
+    
     MouseGetPos &X_Max, &Y_Max
     Calibrato := true
-    ToolTip "Angolo INFERIORE DESTRO registrato! Area pronta."
+    ToolTip "Angolo 2 registrato!"
     Sleep 800
     ToolTip ""
 }
 
 ResetCal() {
     Global Calibrato := false
-    ToolTip "Calibrazione RESETTATA!"
-    Sleep 1000
+    ToolTip "Reset effettuato!"
+    Sleep 800
     ToolTip ""
 }
 
-F1::SetPos1()
-F2::SetPos2()
-F3::ResetCal()
-
 F4:: {
-    Global GuiVisibile
-    if (GuiVisibile) {
+    if WinExist("PixelBot v1.1.0") {
         MainGui.Hide()
-        GuiVisibile := false
-        ToolTip "Pannello Nascosto (Premi F4 per riaprirlo)"
-        Sleep 1000
-        ToolTip ""
     } else {
-        MainGui.Show() 
-        GuiVisibile := true
+        MainGui.Show()
     }
 }
 
 ; ==============================================================================
-; MOTORE PRINCIPALE DEL BOT (TASTO Z)
+; MOTORE DEL BOT
 ; ==============================================================================
-z:: {
-    Static on := false
-    Global X_Min, Y_Min, X_Max, Y_Max, Calibrato
+Global on := false
+StartBot() {
+    Global on, X_Min, Y_Min, X_Max, Y_Max, Calibrato
     
     if (!Calibrato) {
-        MsgBox "Errore: Area non definita! Usa F1 e F2 prima di avviare."
+        MsgBox "Registra prima i due angoli cliccando sul disegno!"
         return
     }
-    
+
     if on := !on 
     {
-        Dimensione := StrLower(GridEdit.Value)
-        Parti := StrSplit(Dimensione, "x")
-        
+        Parti := StrSplit(StrLower(GridEdit.Value), "x")
         if (Parti.Length != 2) {
-            MsgBox "Formato non valido! Usa la 'x' in mezzo (es: 32x32)"
+            MsgBox "Formato dimensioni errato!"
             on := false
             return
         }
@@ -124,138 +176,82 @@ z:: {
         Righe := Number(Parti[2])
         NumColori := Number(ColoriEdit.Value)
         
-        if (NumColori <= 0) {
-            MsgBox "Inserisci un numero valido di colori (maggiore di 0)!"
-            on := false
-            return
-        }
+        Passo_X := (X_Max - X_Min) / (Colonne - 1)
+        Passo_Y := (Y_Max - Y_Min) / (Righe - 1)
         
-        Larghezza_Totale := X_Max - X_Min
-        Altezza_Totale := Y_Max - Y_Min
-        Passo_X := Larghezza_Totale / (Colonne - 1)
-        Passo_Y := Altezza_Totale / (Righe - 1)
-        
-        Pixel_Per_Pausa_Ciclo1 := 3  
-        Pixel_Per_Pausa_Ciclo2 := 1  
-        Pausa_Bordi := 20            
-        
-        Colonne_Bordi := []
-        Loop Colonne {
-            C := A_Index - 1 
-            if (C < 4 || C >= Colonne - 4) {
-                Colonne_Bordi.Push(C)
-            }
-        }
-        
-        ; === LOOP PER OGNI COLORE ===
         Loop NumColori {
             if (!on) {
                 break
             }
-                
-            Colore_Corrente := A_Index
-                
-            ; --- CICLO 1: TUTTO LO SCHERMO ---
-            ToolTip "CICLO 1 (Colore " Colore_Corrente "/" NumColori ") - Premi Z per fermare"
-            Direzione_X := 1 
             
+            Colore_Attuale := A_Index
+            
+            ; --- CICLO 1: ORIZZONTALE ---
+            ToolTip "COLORANDO: " Colore_Attuale "/" NumColori
+            Direzione := 1
             MouseMove X_Min, Y_Min, 0
-            Sleep 20
-            Click "Down" 
+            Click "Down"
             
             Loop Righe {
                 if (!on) {
                     break
                 }
-                    
-                Rigo_Attuale := A_Index - 1
-                Y_Attuale := Y_Min + (Rigo_Attuale * Passo_Y)
                 
+                Y_Cur := Y_Min + ((A_Index - 1) * Passo_Y)
                 Loop Colonne {
                     if (!on) {
                         break
                     }
-                        
-                    Colonna_Attuale := (Direzione_X == 1) ? (A_Index - 1) : (Colonne - A_Index)
-                    X_Attuale := X_Min + (Colonna_Attuale * Passo_X)
                     
-                    MouseMove X_Attuale, Y_Attuale, 0
-                    if (Mod(A_Index, Pixel_Per_Pausa_Ciclo1) == 0) {
-                        Sleep 1 
+                    Col_Idx := (Direzione == 1) ? (A_Index - 1) : (Colonne - A_Index)
+                    MouseMove X_Min + (Col_Idx * Passo_X), Y_Cur, 0
+                    
+                    if (Mod(A_Index, 3) == 0) {
+                        Sleep SpeedSlider.Value
                     }
                 }
-                
-                Sleep Pausa_Bordi 
-                if (!on) {
-                    break
-                }
-                Direzione_X := -Direzione_X 
+                Sleep 20
+                Direzione := -Direzione
             }
-            Click "Up" 
+            Click "Up"
             
+            ; --- CICLO 2: RIFINITURA LATI ---
             if (!on) {
                 break
             }
-                
-            ; --- CICLO 2: SOLO I LATI SU 4 COLONNE ---
-            ToolTip "CICLO 2 (Colore " Colore_Corrente "/" NumColori ") - Lati in rifinitura"
-            Direzione_Y := 1 
             
-            if (Colonne_Bordi.Length > 0) {
-                Prima_Col_Sicura := Colonne_Bordi[1]
-                MouseMove X_Min + (Prima_Col_Sicura * Passo_X), Y_Min, 0
-                Sleep 20
-                Click "Down" 
-                
-                For Indice, Colonna_Attuale in Colonne_Bordi {
+            Click "Down"
+            Loop 2 { 
+                For Col_Bordo in [0, 1, 2, 3, Colonne-4, Colonne-3, Colonne-2, Colonne-1] {
                     if (!on) {
                         break
                     }
-                        
-                    X_Attuale := X_Min + (Colonna_Attuale * Passo_X)
                     
+                    X_Cur := X_Min + (Col_Bordo * Passo_X)
                     Loop Righe {
                         if (!on) {
                             break
                         }
-                            
-                        Rigo_Attuale := (Direzione_Y == 1) ? (A_Index - 1) : (Righe - A_Index)
-                        Y_Attuale := Y_Min + (Rigo_Attuale * Passo_Y)
                         
-                        MouseMove X_Attuale, Y_Attuale, 0
-                        if (Mod(A_Index, Pixel_Per_Pausa_Ciclo2) == 0) {
-                            Sleep 1 
-                        }
+                        Y_Cur := (Mod(Col_Bordo, 2) == 0) ? (Y_Min + ((A_Index-1)*Passo_Y)) : (Y_Max - ((A_Index-1)*Passo_Y))
+                        MouseMove X_Cur, Y_Cur, 0
+                        Sleep SpeedSlider.Value + 1
                     }
-                    
-                    Sleep Pausa_Bordi 
-                    if (!on) {
-                        break
-                    }
-                    Direzione_Y := -Direzione_Y 
                 }
-                Click "Up"
-            } 
+            }
+            Click "Up"
         }
         
-        ; Se finisce tutti i cicli senza essere bloccato
         if (on) {
-            Click "Up" 
             on := false
-            ToolTip "DISEGNO COMPLETATO! Tutti i " NumColori " colori sono stati colorati."
-            Sleep 4000
+            ToolTip "LAVORO FINITO!"
+            Sleep 3000
             ToolTip ""
         }
-    } 
-    Else {
-        Click "Up" 
-        ToolTip "BOT IN PAUSA"
-        Sleep 800
+    } else {
+        Click "Up"
+        ToolTip "BOT FERMATO"
+        Sleep 1000
         ToolTip ""
     }
-}
-
-Esc:: {
-    Click "Up" 
-    ExitApp
 }
