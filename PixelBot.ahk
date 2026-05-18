@@ -22,7 +22,7 @@ Global HK_Start := IniRead(IniFile, "Hotkeys", "Start", "z")
 ; ==============================================================================
 ; CREAZIONE INTERFACCIA GRAFICA (GUI)
 ; ==============================================================================
-MainGui := Gui("+AlwaysOnTop", "PixelBot v1.1.0")
+MainGui := Gui("+AlwaysOnTop", "PixelBot v1.2.0")
 MainGui.OnEvent("Close", (*) => ExitApp()) ; Chiusura standard con la X
 
 MainGui.SetFont("s9 bold")
@@ -113,7 +113,7 @@ SetPos1() {
     Global X_Min, Y_Min
     ToolTip "Fai CLICK SINISTRO sull'angolo in ALTO A SINISTRA del disegno..."
     
-    KeyWait "LButton"      ; Aspetta che il tasto sinistro venga rilasciato (se hai appena cliccato la GUI)
+    KeyWait "LButton"      ; Aspetta che il tasto sinistro venga rilasciato
     KeyWait "LButton", "D" ; Attende che il tasto sinistro venga premuto
     
     MouseGetPos &X_Min, &Y_Min
@@ -144,7 +144,7 @@ ResetCal() {
 }
 
 F4:: {
-    if WinExist("PixelBot v1.1.0") {
+    if WinExist("PixelBot v1.2.0") {
         MainGui.Hide()
     } else {
         MainGui.Show()
