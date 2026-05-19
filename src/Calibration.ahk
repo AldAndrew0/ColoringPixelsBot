@@ -22,6 +22,7 @@ SetPos1() {
             return
         }
         MouseGetPos &X_Min, &Y_Min
+        LabelPos1.Value := "Angolo 1 (↖):  X=" X_Min "  Y=" Y_Min
         SoundBeep 1000, 150
         ToolTip "✅ Angolo 1 registrato!"
         Sleep 1000
@@ -51,6 +52,7 @@ SetPos2() {
         }
         MouseGetPos &X_Max, &Y_Max
         Calibrato := true
+        LabelPos2.Value := "Angolo 2 (↘):  X=" X_Max "  Y=" Y_Max
         SoundBeep 1000, 150
         ToolTip "✅ Angolo 2 registrato!"
         Sleep 1000
@@ -61,9 +63,10 @@ SetPos2() {
 }
 
 ResetCal() {
-    ; Sintassi AHK v2 corretta: Global dichiarato separato dall'assegnazione
     Global Calibrato
     Calibrato := false
+    LabelPos1.Value := "Angolo 1 (↖):  non registrato"
+    LabelPos2.Value := "Angolo 2 (↘):  non registrato"
     SoundBeep 800, 100
     ToolTip "🔄 Reset effettuato!"
     Sleep 1000

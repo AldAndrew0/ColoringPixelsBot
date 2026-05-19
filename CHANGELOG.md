@@ -5,6 +5,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
 ---
 
+## [1.5.0] - 2025
+
+### Added
+- **Coordinate calibrate visibili in GUI**: nuova sezione "COORDINATE CALIBRATE" che mostra
+  in tempo reale X e Y di entrambi gli angoli registrati. Si aggiorna subito dopo ogni click
+  di calibrazione e si azzera al Reset.
+- **Barra di avanzamento**: nuova sezione "STATO ESECUZIONE" con barra Progress e label testuale
+  che mostrano il colore corrente (`🎨 Colore 3 / 10`), il completamento (`✅ Completato!`)
+  e lo stop manuale (`🛑 Fermato`). La barra va da 0 a 100% sul totale dei colori.
+
+---
+
 ## [1.4.0] - 2025
 
 ### Fixed

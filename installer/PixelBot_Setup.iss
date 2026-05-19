@@ -1,6 +1,6 @@
 [Setup]
 AppName=PixelBot
-AppVersion=1.4.0
+AppVersion=1.5.0
 AppPublisher=Andrea Alduino
 AppSupportURL=https://github.com/AndreaAlduino/PixelBot
 
@@ -10,7 +10,7 @@ DefaultGroupName=PixelBot
 
 ; Output
 OutputDir=.
-OutputBaseFilename=PixelBot_Installer_v1.4.0
+OutputBaseFilename=PixelBot_Installer_v1.5.0
 SetupIconFile=..\assets\PixelBot.ico
 
 ; Compressione

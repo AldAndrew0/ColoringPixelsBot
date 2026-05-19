@@ -60,6 +60,8 @@ StartBot() {
                 break
 
             Colore_Attuale := A_Index
+            ProgressBar.Value := Round((Colore_Attuale - 1) / NumColori * 100)
+            LabelProgress.Value := "🎨 Colore " Colore_Attuale " / " NumColori
             ToolTip "COLORANDO: " Colore_Attuale "/" NumColori
             Direzione := 1
             MouseMove X_Min, Y_Min, 0
@@ -173,6 +175,8 @@ StartBot() {
 
         if (on) {
             on := false
+            ProgressBar.Value := 100
+            LabelProgress.Value := "✅ Completato!"
             SoundBeep 1500, 300
             ToolTip "🎉 LAVORO FINITO!"
             Sleep 3000
@@ -181,6 +185,8 @@ StartBot() {
 
     } else {
         Click "Up"
+        ProgressBar.Value := 0
+        LabelProgress.Value := "🛑 Fermato"
         SoundBeep 400, 200
         ToolTip "🛑 BOT FERMATO"
         Sleep 1000

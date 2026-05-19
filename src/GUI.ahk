@@ -41,10 +41,26 @@ Global HK3_Edit := MainGui.Add("Hotkey", "x140 yp w110 h25", HK3)
 MainGui.Add("Text", "x10 y+15 w120", "Avvia/Stop:")
 Global HKStart_Edit := MainGui.Add("Hotkey", "x140 yp-3 w110", HK_Start)
 
+; --- Sezione: Coordinate Calibrate (aggiornate live da Calibration.ahk) ---
+MainGui.SetFont("s9 bold")
+MainGui.Add("Text", "w250 y+15", "--- COORDINATE CALIBRATE ---")
+MainGui.SetFont("s9 norm")
+
+Global LabelPos1 := MainGui.Add("Text", "w250 y+8 cGray", "Angolo 1 (↖):  non registrato")
+Global LabelPos2 := MainGui.Add("Text", "w250 y+5 cGray", "Angolo 2 (↘):  non registrato")
+
 ; --- Pulsante Salva ---
 BtnSave := MainGui.Add("Button", "x10 y+20 w250 h30", "SALVA E APPLICA TASTI")
 BtnSave.OnEvent("Click", (*) => SaveAndApply())
 
-MainGui.Add("Text", "w250 cGray Center y+10", "Premi F4 per nascondere/mostrare")
+; --- Sezione: Stato Esecuzione (aggiornata live da Bot.ahk) ---
+MainGui.SetFont("s9 bold")
+MainGui.Add("Text", "w250 y+15", "--- STATO ESECUZIONE ---")
+MainGui.SetFont("s9 norm")
+
+Global LabelProgress := MainGui.Add("Text", "w250 y+8 cGray", "In attesa...")
+Global ProgressBar   := MainGui.Add("Progress", "w250 h14 y+5 Range0-100", 0)
+
+MainGui.Add("Text", "w250 cGray Center y+12", "Premi F4 per nascondere/mostrare")
 
 MainGui.Show("AutoSize Center")
