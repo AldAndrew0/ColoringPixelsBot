@@ -3,7 +3,7 @@
 ; ==============================================================================
 
 ; Versione centralizzata: modificare QUI per aggiornare tutta l'app
-Global APP_VERSION := "1.5.0"
+Global APP_VERSION := "1.6.0"
 Global APP_TITLE   := "PixelBot v" APP_VERSION
 
 ; --- Stato runtime ---
@@ -22,10 +22,11 @@ Global IniFile := A_ScriptDir "\PixelBot_Settings.ini"
 Global Grid_Saved   := IniRead(IniFile, "Settings", "Grid",   "32x32")
 Global Colors_Saved := IniRead(IniFile, "Settings", "Colors", "10")
 Global Speed_Saved  := IniRead(IniFile, "Settings", "Speed",  "1.0x (Originale)")
-Global HK1          := IniRead(IniFile, "Hotkeys",  "Angle1", "F1")
-Global HK2          := IniRead(IniFile, "Hotkeys",  "Angle2", "F2")
-Global HK3          := IniRead(IniFile, "Hotkeys",  "Reset",  "F3")
-Global HK_Start     := IniRead(IniFile, "Hotkeys",  "Start",  "z")
+Global HK1          := IniRead(IniFile, "Hotkeys",  "Angle1",    "F1")
+Global HK2          := IniRead(IniFile, "Hotkeys",  "Angle2",    "F2")
+Global HK3          := IniRead(IniFile, "Hotkeys",  "Reset",     "F3")
+Global HK_Auto      := IniRead(IniFile, "Hotkeys",  "AutoCalib", "F5")
+Global HK_Start     := IniRead(IniFile, "Hotkeys",  "Start",     "z")
 
 ; --- Compatibilità con v1.2.0 (Speed era uno slider numerico) ---
 if (IsInteger(Speed_Saved)) {

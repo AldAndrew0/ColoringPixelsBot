@@ -11,19 +11,20 @@ ToggleGui() {
 }
 
 SaveAndApply() {
-    Global HK1, HK2, HK3, HK_Start
+    Global HK1, HK2, HK3, HK_Auto, HK_Start
 
     ; Rimozione hotkey precedenti prima di riregistrarle
-    ; Nota: sintassi AHK v2 corretta per try su singola istruzione (senza graffe)
-    try Hotkey(HK1, "Off")
-    try Hotkey(HK2, "Off")
-    try Hotkey(HK3, "Off")
+    try Hotkey(HK1,     "Off")
+    try Hotkey(HK2,     "Off")
+    try Hotkey(HK3,     "Off")
+    try Hotkey(HK_Auto, "Off")
     try Hotkey(HK_Start, "Off")
 
     ; Lettura dei nuovi valori dai controlli GUI
-    HK1     := HK1_Edit.Value
-    HK2     := HK2_Edit.Value
-    HK3     := HK3_Edit.Value
+    HK1      := HK1_Edit.Value
+    HK2      := HK2_Edit.Value
+    HK3      := HK3_Edit.Value
+    HK_Auto  := HKAuto_Edit.Value
     HK_Start := HKStart_Edit.Value
 
     ; Persistenza su INI
@@ -33,12 +34,14 @@ SaveAndApply() {
     IniWrite(HK1,                 IniFile, "Hotkeys",  "Angle1")
     IniWrite(HK2,                 IniFile, "Hotkeys",  "Angle2")
     IniWrite(HK3,                 IniFile, "Hotkeys",  "Reset")
+    IniWrite(HK_Auto,             IniFile, "Hotkeys",  "AutoCalib")
     IniWrite(HK_Start,            IniFile, "Hotkeys",  "Start")
 
     ; Registrazione nuove hotkey
-    Hotkey(HK1,     (*) => SetPos1())
-    Hotkey(HK2,     (*) => SetPos2())
-    Hotkey(HK3,     (*) => ResetCal())
+    Hotkey(HK1,      (*) => SetPos1())
+    Hotkey(HK2,      (*) => SetPos2())
+    Hotkey(HK3,      (*) => ResetCal())
+    Hotkey(HK_Auto,  (*) => AutoCalibrate())
     Hotkey(HK_Start, (*) => StartBot())
 
     SoundBeep 1500, 150

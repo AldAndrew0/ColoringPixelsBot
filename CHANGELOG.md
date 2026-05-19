@@ -5,6 +5,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
 ---
 
+## [1.6.0] - 2025
+
+### Added
+- **Autocalibrazione automatica** (`AutoCalibrate`, default `F5`): rileva in automatico
+  i bordi del canvas senza nessun click manuale. Principio: lo sfondo del gioco è sempre
+  nero puro (0,0,0); `PixelSearch` con target `0x808080 ±127` cattura qualsiasi pixel
+  non-nero. Scan coarse a step=5px + raffinamento pixel-perfect a step=1px per tutti e 4
+  i bordi (top, bottom, left, right). Funziona con canvas rettangolari e forme irregolari.
+  Richiede che la finestra `ColoringPixels` sia aperta con un livello caricato.
+- Aggiunto `CoordMode "Pixel", "Screen"` all'entry point per PixelSearch.
+- Nuovo hotkey `HK_Auto` (default `F5`) salvato su INI e personalizzabile dalla GUI.
+
+---
+
 ## [1.5.0] - 2025
 
 ### Added

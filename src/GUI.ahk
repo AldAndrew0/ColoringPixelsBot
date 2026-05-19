@@ -38,6 +38,10 @@ BtnReset := MainGui.Add("Button", "x10 y+10 w120 h25", "🔄 Reset")
 BtnReset.OnEvent("Click", (*) => ResetCal())
 Global HK3_Edit := MainGui.Add("Hotkey", "x140 yp w110 h25", HK3)
 
+BtnAutoCalib := MainGui.Add("Button", "x10 y+10 w120 h25", "🤖 AutoCalibra")
+BtnAutoCalib.OnEvent("Click", (*) => AutoCalibrate())
+Global HKAuto_Edit := MainGui.Add("Hotkey", "x140 yp w110 h25", HK_Auto)
+
 MainGui.Add("Text", "x10 y+15 w120", "Avvia/Stop:")
 Global HKStart_Edit := MainGui.Add("Hotkey", "x140 yp-3 w110", HK_Start)
 

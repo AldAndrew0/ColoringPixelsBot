@@ -4,6 +4,7 @@
 
 CoordMode "Mouse", "Screen"
 CoordMode "ToolTip", "Screen"
+CoordMode "Pixel", "Screen"   ; necessario per AutoCalibrate (PixelSearch)
 SetMouseDelay -1
 
 #Include src/Config.ahk
