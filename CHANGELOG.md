@@ -5,6 +5,30 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
 ---
 
+## [1.7.0] - 2025
+
+### Added
+- **Smart skip celle non disegnabili** (Bot.ahk): il bot colora SOLO le zone
+  effettivamente parte del disegno, ignorando lo sfondo nero.
+  - Ciclo 1: campiona 5 punti per riga (SX, 25%, 50%, 75%, DX). Se tutti e 5
+    sono sotto la soglia di luminosità (brightness ≤ 20), la riga viene saltata.
+  - Ciclo 2 e 3: smart drag con gestione segmenti. Quando il mouse incontra
+    una cella nera, solleva il tasto, la supera, e riprende il drag sulla
+    prima cella disegnabile successiva.
+  - Funziona per qualsiasi forma: rettangolare, irregolare, con buchi interni.
+- **Nuova UI a 3 tab** (GUI.ahk): interfaccia completamente ridisegnata,
+  compatta (280×340px vs precedente ~260×500px).
+  - Tab "Bot": griglia, colori, velocità, pulsante avvia/stop, barra avanzamento.
+  - Tab "Calibra": registrazione manuale A1/A2, AutoCalibra, reset, suggerimenti.
+  - Tab "Tasti": personalizzazione hotkey e salvataggio.
+
+### Fixed
+- **AutoCalibra fullscreen** (Calibration.ahk): rilevamento dinamico title bar
+  via flag WS_CAPTION invece di offset hardcoded 32px. BottomBarH=120px per
+  coprire sia la modalità fullscreen (~116px) che windowed (~92px).
+
+---
+
 ## [1.6.0] - 2025
 
 ### Added

@@ -1,5 +1,5 @@
 ; ==============================================================================
-; CALIBRATION.AHK — Registrazione degli angoli del disegno tramite click
+; CALIBRATION.AHK — Registrazione manuale e automatica degli angoli del canvas
 ; ==============================================================================
 
 SetPos1() {
@@ -8,8 +8,6 @@ SetPos1() {
         return
 
     IsWaiting := true
-    ; Bug 3 Fix: try/finally garantisce IsWaiting := false in ogni caso
-    ; (timeout, eccezione interna, return anticipato)
     try {
         SoundBeep 500, 150
         ToolTip ">> Fai CLICK SINISTRO sull'ANGOLO IN ALTO A SINISTRA <<"
@@ -38,7 +36,6 @@ SetPos2() {
         return
 
     IsWaiting := true
-    ; Bug 3 Fix: try/finally garantisce IsWaiting := false in ogni caso
     try {
         SoundBeep 500, 150
         ToolTip ">> Fai CLICK SINISTRO sull'ANGOLO IN BASSO A DESTRA <<"
@@ -76,11 +73,13 @@ ResetCal() {
 ; ==============================================================================
 ; AUTOCALIBRATE — Rileva automaticamente i bordi del canvas via PixelSearch
 ;
-; Principio: lo sfondo del gioco è SEMPRE nero puro (0,0,0).
-; PixelSearch con target 0x808080 ±127 cattura qualsiasi pixel non-nero.
-; Si esegue una scansione coarse (step=5px) + raffinamento (step=1px) per
-; trovare i 4 bordi del canvas (top, bottom, left, right) in modo preciso.
-; Funziona con canvas rettangolari E forme irregolari.
+; Principio: sfondo gioco = nero puro (0,0,0). PixelSearch(0x808080 ±127)
+; cattura qualsiasi pixel NON nero. Scan coarse step=5px + raffinamento 1px
+; su tutti e 4 i bordi (top/bottom/left/right).
+;
+; Fullscreen: WS_CAPTION assente → TitleBarH = 0
+; Windowed:   WS_CAPTION presente → TitleBarH = 32px
+; BottomBarH: 120px (copre fullscreen ~116px e windowed ~92px)
 ; ==============================================================================
 AutoCalibrate() {
     Global X_Min, Y_Min, X_Max, Y_Max, Calibrato, IsWaiting
@@ -94,37 +93,35 @@ AutoCalibrate() {
         ; --- 1. Trova la finestra del gioco ---
         if !WinExist("ColoringPixels") {
             SoundBeep 200, 300
-            ToolTip "❌ Finestra 'ColoringPixels' non trovata!`nApri il gioco e carica un livello prima."
+            ToolTip "❌ Finestra 'ColoringPixels' non trovata!`nApri il gioco e carica un livello."
             Sleep 3000
             ToolTip ""
             return
         }
         WinGetPos(&WX, &WY, &WW, &WH, "ColoringPixels")
 
-        ; --- 2. Definisci zona di ricerca (esclude title bar e bottom bar UI) ---
-        ; Title bar Windows: ~32px | Bottom bar colori del gioco: ~92px
-        SL := WX + 5           ; Search Left   (margine sicurezza)
-        SR := WX + WW - 5      ; Search Right
-        ST := WY + 32          ; Search Top    (sotto la title bar)
-        SB := WY + WH - 92     ; Search Bottom (sopra la barra colori)
+        ; --- 2. Calcola zona di ricerca (fullscreen vs windowed) ---
+        HasTitleBar := (WinGetStyle("ColoringPixels") & 0xC00000) != 0
+        TitleBarH   := HasTitleBar ? 32 : 0
+        BottomBarH  := 120
 
-        ; Parametri PixelSearch:
-        ; Target 0x808080 ±127 → cattura tutto ciò che NON è nero puro (0,0,0)
+        SL := WX + 5
+        SR := WX + WW - 5
+        ST := WY + TitleBarH
+        SB := WY + WH - BottomBarH
+
         SC := 0x808080
         SV := 127
-        PS := 5  ; passo scan coarse (pixel)
-
-        ; Helper: search su una singola riga
-        _RowHit(y) => PixelSearch(&_x, &_y, SL, y, SR, y, SC, SV)
-        ; Helper: search su una singola colonna
-        _ColHit(x) => PixelSearch(&_x, &_y, x, ST, x, SB, SC, SV)
+        PS := 5
 
         ; --- 3. Trova Y_Min (bordo superiore) ---
         Found_YMin := -1
         y := ST
         while (y <= SB) {
-            if _RowHit(y) { Found_YMin := y  ;  break
-                break }
+            if PixelSearch(&_px, &_py, SL, y, SR, y, SC, SV) {
+                Found_YMin := y
+                break
+            }
             y += PS
         }
         if (Found_YMin == -1) {
@@ -134,10 +131,9 @@ AutoCalibrate() {
             ToolTip ""
             return
         }
-        ; Raffinamento pixel-perfect (risale fino a Step-1 righe prima)
-        Loop (Min(PS - 1, Found_YMin - ST)) {
+        Loop Min(PS - 1, Found_YMin - ST) {
             yy := Found_YMin - A_Index
-            if _RowHit(yy)
+            if PixelSearch(&_px, &_py, SL, yy, SR, yy, SC, SV)
                 Found_YMin := yy
         }
 
@@ -145,49 +141,61 @@ AutoCalibrate() {
         Found_YMax := -1
         y := SB
         while (y >= ST) {
-            if _RowHit(y) { Found_YMax := y
-                break }
+            if PixelSearch(&_px, &_py, SL, y, SR, y, SC, SV) {
+                Found_YMax := y
+                break
+            }
             y -= PS
         }
-        Loop (Min(PS - 1, SB - Found_YMax)) {
-            yy := Found_YMax + A_Index
-            if _RowHit(yy)
-                Found_YMax := yy
+        if (Found_YMax != -1) {
+            Loop Min(PS - 1, SB - Found_YMax) {
+                yy := Found_YMax + A_Index
+                if PixelSearch(&_px, &_py, SL, yy, SR, yy, SC, SV)
+                    Found_YMax := yy
+            }
         }
 
         ; --- 5. Trova X_Min (bordo sinistro) ---
         Found_XMin := -1
         x := SL
         while (x <= SR) {
-            if _ColHit(x) { Found_XMin := x
-                break }
+            if PixelSearch(&_px, &_py, x, ST, x, SB, SC, SV) {
+                Found_XMin := x
+                break
+            }
             x += PS
         }
-        Loop (Min(PS - 1, Found_XMin - SL)) {
-            xx := Found_XMin - A_Index
-            if _ColHit(xx)
-                Found_XMin := xx
+        if (Found_XMin != -1) {
+            Loop Min(PS - 1, Found_XMin - SL) {
+                xx := Found_XMin - A_Index
+                if PixelSearch(&_px, &_py, xx, ST, xx, SB, SC, SV)
+                    Found_XMin := xx
+            }
         }
 
         ; --- 6. Trova X_Max (bordo destro) ---
         Found_XMax := -1
         x := SR
         while (x >= SL) {
-            if _ColHit(x) { Found_XMax := x
-                break }
+            if PixelSearch(&_px, &_py, x, ST, x, SB, SC, SV) {
+                Found_XMax := x
+                break
+            }
             x -= PS
         }
-        Loop (Min(PS - 1, SR - Found_XMax)) {
-            xx := Found_XMax + A_Index
-            if _ColHit(xx)
-                Found_XMax := xx
+        if (Found_XMax != -1) {
+            Loop Min(PS - 1, SR - Found_XMax) {
+                xx := Found_XMax + A_Index
+                if PixelSearch(&_px, &_py, xx, ST, xx, SB, SC, SV)
+                    Found_XMax := xx
+            }
         }
 
-        ; --- 7. Validazione risultato ---
-        if (Found_XMin == -1 || Found_XMax == -1 || Found_YMin == -1 || Found_YMax == -1
+        ; --- 7. Validazione ---
+        if (Found_XMin == -1 || Found_XMax == -1 || Found_YMax == -1
             || Found_XMin >= Found_XMax || Found_YMin >= Found_YMax) {
             SoundBeep 200, 300
-            ToolTip "❌ Autocalibrazione fallita!`nVerifica che il livello sia ben visibile e non zoomato."
+            ToolTip "❌ Autocalibrazione fallita!`nVerifica che il livello sia ben visibile."
             Sleep 3000
             ToolTip ""
             return

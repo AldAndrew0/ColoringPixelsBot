@@ -3,7 +3,7 @@
 ; ==============================================================================
 
 ; Versione centralizzata: modificare QUI per aggiornare tutta l'app
-Global APP_VERSION := "1.6.0"
+Global APP_VERSION := "1.7.0"
 Global APP_TITLE   := "PixelBot v" APP_VERSION
 
 ; --- Stato runtime ---
